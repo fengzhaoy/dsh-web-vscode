@@ -66,6 +66,7 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   const ext = src('vscode-extension/extension.js')
   check('AI commit: host method present', host.includes('async generateCommitMessage('))
   check('Config is a schemastery schema (cordis calls ~standard.validate)', host.includes('static Config = z.object({})'))
+  check('extension dir resolved ESM-safely (no __dirname in ESM bundle)', host.includes('fileURLToPath(import.meta.url)') && !host.includes('join(__dirname'))
   check('AI commit: bridge env passed to code-server', host.includes('DSH_AI_BRIDGE_URL'))
   check('AI commit: bridge binds loopback only', host.includes("'127.0.0.1'"))
   check('AI commit: extension button in scm/title navigation group', extPkg.includes('"scm/title"') && extPkg.includes('navigation@-1'))

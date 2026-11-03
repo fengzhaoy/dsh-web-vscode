@@ -14,7 +14,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { createServer, type Server } from 'node:http'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import z from '@deepseek-ai/schemastery'
 import { BlockAssembler, createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -528,8 +529,9 @@ export class VscodeTools extends TypertRemoteService {
   private async installBundledExtension(extensionsDir: string): Promise<void> {
     try {
       // lib/vscode-extension ships inside this package (tsdown copies it via
-      // the build script; see scripts/copy-extension.mjs).
-      const srcDir = join(__dirname, 'vscode-extension')
+      // the build script; see scripts/copy-extension.mjs). This bundle is ESM:
+      // __dirname does not exist — resolve from import.meta.url instead.
+      const srcDir = join(dirname(fileURLToPath(import.meta.url)), 'vscode-extension')
       if (!existsSync(join(srcDir, 'extension.js'))) return
       const dstDir = join(extensionsDir, 'dsh-ai-commit')
       await mkdir(dstDir, { recursive: true })
