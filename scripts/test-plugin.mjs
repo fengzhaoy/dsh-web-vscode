@@ -70,6 +70,7 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   check('AI commit: bridge env passed to code-server', host.includes('DSH_AI_BRIDGE_URL'))
   check('AI commit: bridge binds loopback only', host.includes("'127.0.0.1'"))
   check('AI commit: extension button in scm/title navigation group', extPkg.includes('"scm/title"') && extPkg.includes('navigation@-1'))
+  check('AI commit: when clause matches the git scm provider context key', extPkg.includes('"when": "scmProvider == git"'))
   check('AI commit: extension reads bridge URL from env', ext.includes('DSH_AI_BRIDGE_URL'))
   check('AI commit: extension writes into the scm input box', ext.includes('input.value = body.message'))
   check('AI commit: second click cancels generation', ext.includes('inFlight.abort()'))

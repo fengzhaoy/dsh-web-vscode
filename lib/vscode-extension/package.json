@@ -31,7 +31,7 @@
         {
           "command": "dsh-ai-commit.generate",
           "group": "navigation@-1",
-          "when": "config.git.enabled && scmProviderCount == 1"
+          "when": "scmProvider == git"
         }
       ]
     },
