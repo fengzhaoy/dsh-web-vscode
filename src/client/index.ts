@@ -1,7 +1,8 @@
 /**
  * Client entry for the VS Code plugin: register the `vscode` view tab into
- * the conversation view ring, right AFTER the chat tab (chat order 0, this
- * order 1, so it sits between chat and trajectory), AND as a right-sidebar
+ * the conversation view ring, AFTER the trajectory tab (chat order 0,
+ * dsh-web-ide 5, trajectory 10, this order 11 — last in the ring), AND as
+ * a right-sidebar
  * tab (like dsh-web-ide). Both bodies land directly in the embedded VS Code
  * (code-server) workbench — the default page this plugin exists for.
  *
@@ -190,7 +191,7 @@ export async function apply(ctx: VscodeClientContext) {
       {
         name: 'conversation.view',
         id: 'vscode',
-        order: 1,
+        order: 11,
         locale: NS,
         label: () => t('view.vscode'),
         inject: (sessionId: string): VscodeViewInjected => viewPropsFor(sessionId),
