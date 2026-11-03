@@ -16,6 +16,7 @@ import { homedir } from 'node:os'
 import { createServer, type Server } from 'node:http'
 import { join } from 'node:path'
 import { RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import z from '@deepseek-ai/schemastery'
 import { BlockAssembler, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { deepFreeze } from '@deepseek-ai/dsh-util-values'
 import { codeServerArgs, findCodeServer, nextFreePort, workspaceUrl, type VscodeServerEntry } from './vscode-server.js'
@@ -48,7 +49,7 @@ interface VscodeServerEntryWithBridge extends VscodeServerEntry {
 export class VscodeTools extends TypertRemoteService {
   static inject = ['subprocess', 'sessions', 'llm', 'agentDefaultModel']
 
-  static Config = {}
+  static Config = z.object({})
 
   /** One code-server per DSH Session. */
   private readonly vscodeServers = new Map<string, VscodeServerEntryWithBridge>()

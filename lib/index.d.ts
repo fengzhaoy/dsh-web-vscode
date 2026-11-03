@@ -1,4 +1,5 @@
 import { TypertRemoteService } from "@deepseek-ai/dsh-typert-protocol";
+import z from "@deepseek-ai/schemastery";
 import { Context } from "@deepseek-ai/cordis";
 
 //#region src/index.d.ts
@@ -15,7 +16,7 @@ interface CommitMessageResult {
 }
 declare class VscodeTools extends TypertRemoteService {
   static inject: string[];
-  static Config: {};
+  static Config: z<Schemastery.ObjectS<{}>, Schemastery.ObjectT<{}>, "plain">;
   /** One code-server per DSH Session. */
   private readonly vscodeServers;
   private static readonly GIT_STDOUT_MAX_BYTES;

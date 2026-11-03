@@ -22,16 +22,24 @@ check('uses the provided state dirs', args.includes('/u') && args.includes('/e')
 // --- url + ports ---
 check('workspace url encodes the folder', workspaceUrl('http://127.0.0.1:8787', '/tmp/my proj') === 'http://127.0.0.1:8787/?folder=%2Ftmp%2Fmy%20proj')
 check('url keeps origin intact', workspaceUrl('http://127.0.0.1:8787', '/a').startsWith('http://127.0.0.1:8787/'))
-const occupied = await nextFreePort(8787, []) // whatever the OS gives us on 8787+ (8787 may be held by dsh-web-ide)
-check('free port skips one in use', await nextFreePort(8787, [occupied]) === occupied + 1 || (await nextFreePort(8787, [occupied])) !== occupied)
-check('free port probes the OS (8787 held by another process is skipped)', await nextFreePort(8787, []) !== 8787 || isFree(8787) === true)
-async function isFree(p) { // true when 8787 is genuinely bindable — else some other process holds it
+check('free port skips one in use', await nextFreePort(8787, [8787]) !== 8787)
+{
+  // Self-contained OS probe check: hold a port ourselves, then ask nextFreePort
+  // for it WITHOUT listing it in inUse — it must skip the genuinely-occupied port.
   const { createServer } = await import('node:http')
-  return await new Promise((resolve) => {
+  const held = await new Promise((resolve) => {
     const s = createServer()
-    s.once('error', () => resolve(false))
-    s.listen(p, '127.0.0.1', () => s.close(() => resolve(true)))
+    s.once('error', () => resolve(null))
+    s.listen(0, '127.0.0.1', () => resolve(s))
   })
+  if (held === null) {
+    check('free port probes the OS (occupied port is skipped)', false, 'could not bind a probe port')
+  } else {
+    const addr = held.address()
+    const picked = await nextFreePort(addr.port - 1, [])
+    check('free port probes the OS (occupied port is skipped)', picked !== addr.port, 'picked ' + picked + ', held ' + addr.port)
+    await new Promise((r2) => held.close(() => r2()))
+  }
 }
 check('honours DSH_IDE_VSCODE_BIN first', codeServerCandidates({ DSH_IDE_VSCODE_BIN: '/x/cs' })[0] === '/x/cs')
 check('probes several standard locations', codeServerCandidates({ HOME: '/h' }).length >= 3)
@@ -57,6 +65,7 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   const extPkg = src('vscode-extension/package.json')
   const ext = src('vscode-extension/extension.js')
   check('AI commit: host method present', host.includes('async generateCommitMessage('))
+  check('Config is a schemastery schema (cordis calls ~standard.validate)', host.includes('static Config = z.object({})'))
   check('AI commit: bridge env passed to code-server', host.includes('DSH_AI_BRIDGE_URL'))
   check('AI commit: bridge binds loopback only', host.includes("'127.0.0.1'"))
   check('AI commit: extension button in scm/title navigation group', extPkg.includes('"scm/title"') && extPkg.includes('navigation@-1'))
