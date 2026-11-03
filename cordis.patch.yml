@@ -1,0 +1,9 @@
+# The dsh-web-vscode bundle patch: register this plugin into the web
+# profile's browser roster. The browser modules node scans the roster into
+# window.__DSH_BOOT__, and the client bundle at lib/client.js registers the
+# 'vscode' conversation.view tab (right after the chat tab) plus a right
+# sidebar tab on activation. The host face (lib/index.js, VscodeTools) manages
+# one code-server process per DSH Session.
+- insert:
+    - id: ui-vscode
+      name: '@zhaoyang10/dsh-web-vscode'
