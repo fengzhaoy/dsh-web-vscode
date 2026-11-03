@@ -130,6 +130,7 @@ declare const TYPERT: {
       jsDoc: string;
       key: string;
       exportName: string;
+      types: unknown[];
       members: {
         kind: string;
         name: string;

@@ -76,7 +76,7 @@ export function VscodeView(props: VscodeViewInjected) {
   }, [sessionId, openVscode])
 
   return (
-    <div className="vscode-shell" data-testid="vscode-shell">
+    <div className="vscode-shell" data-testid="vscode-shell" data-vscode-view="">
       <div className="vscode-bar">
         <span className="vscode-title">{t('vscode.title')}</span>
         {info !== undefined && (

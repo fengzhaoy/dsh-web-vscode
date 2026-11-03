@@ -45,6 +45,11 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   check('host exposes vscodeOpen/Status/Stop', host.includes('async vscodeOpen(') && host.includes('async vscodeStatus(') && host.includes('async vscodeStop('))
   check('host spawns the discovered binary', host.includes('argv: [bin, ...codeServerArgs('))
   check('host tears down servers on dispose', host.includes('disposeAll'))
+  const theme = src('src/client/theme.ts')
+  check('composer seat hidden while vscode view mounted', theme.includes(`:has([data-vscode-view]) ~ [data-composer-seat]{display:none}`))
+  check('width handles hidden while vscode view mounted', theme.includes(`:has([data-vscode-view]) ~ [data-width-handle]{display:none !important}`))
+  check('session container stretches under vscode view', theme.includes(`:has([data-vscode-view]) > div{flex:1 1 0%`))
+  check('view root carries the data-vscode-view marker', view.includes('data-vscode-view=""'))
 }
 
 // --- manifest parity ---

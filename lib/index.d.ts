@@ -1,4 +1,5 @@
 import { TypertRemoteService } from "@deepseek-ai/dsh-typert-protocol";
+import Schema from "@deepseek-ai/schemastery";
 import { Context } from "@deepseek-ai/cordis";
 
 //#region src/index.d.ts
@@ -11,7 +12,9 @@ interface VscodeInfo {
 }
 declare class VscodeTools extends TypertRemoteService {
   static inject: string[];
-  static Config: {};
+  /** Cordis requires a Config schema; an empty object literal is invalid
+   *  (resolveConfig reads Config.validate and crashes on undefined). */
+  static Config: Schema<Schemastery.ObjectS<{}>, Schemastery.ObjectT<{}>, "plain">;
   /** One code-server per DSH Session. */
   private readonly vscodeServers;
   constructor(ctx: Context, _config: Record<string, never>);

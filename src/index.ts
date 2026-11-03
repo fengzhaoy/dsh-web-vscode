@@ -10,6 +10,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import Schema from '@deepseek-ai/schemastery'
 import { codeServerArgs, findCodeServer, nextFreePort, workspaceUrl, type VscodeServerEntry } from './vscode-server.js'
 
 /** Prototype marker the typert protocol's Remote decorators write; declared
@@ -29,7 +30,9 @@ export interface VscodeInfo {
 export class VscodeTools extends TypertRemoteService {
   static inject = ['subprocess', 'sessions']
 
-  static Config = {}
+  /** Cordis requires a Config schema; an empty object literal is invalid
+   *  (resolveConfig reads Config.validate and crashes on undefined). */
+  static Config = Schema.object({})
 
   /** One code-server per DSH Session. */
   private readonly vscodeServers = new Map<string, VscodeServerEntry>()

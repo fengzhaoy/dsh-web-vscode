@@ -109,6 +109,7 @@ export const serviceModel = {
   jsDoc: '/** Host-backed VS Code Server management: one code-server per DSH Session. */',
   key: 'vscodeTools',
   exportName: 'VscodeTools',
+  types: [] as unknown[],
   members: [
     {
       kind: 'method',
