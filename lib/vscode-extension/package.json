@@ -22,7 +22,7 @@
       {
         "command": "dsh-ai-commit.generate",
         "title": "Generate Commit Message with AI",
-        "icon": "$(sparkle)",
+        "icon": "$(wand)",
         "category": "DSH"
       }
     ],
