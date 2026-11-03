@@ -543,10 +543,60 @@ export class VscodeTools extends TypertRemoteService {
       const dstPkgPath = join(dstDir, 'package.json')
       const dstPkg = existsSync(dstPkgPath) ? await readFile(dstPkgPath, 'utf8') : ''
       if (dstPkg !== srcPkg) await writeFile(dstPkgPath, srcPkg)
-      // The extensions.json manifest (code-server's listing) is optional: the
-      // scanner also walks the directory. Leave it untouched.
+      // Keep the extensions.json manifest entry present and current: the
+      // workbench's Extensions view reads this listing, and a user clicking
+      // "Remove Extension" there deletes the entry (the folder survives).
+      // Re-registering here self-heals such a removal on the next VS Code
+      // tab open, and matches what `code-server --install-extension` writes.
+      await this.registerExtensionManifestEntry(extensionsDir, dstDir, srcPkg)
     } catch (err) {
       console.warn('[ui-vscode] bundled extension install failed:', err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  /** Ensure extensions.json lists the bundled extension. Best effort: a
+   *  malformed manifest is reset to a fresh list with just this entry. */
+  private async registerExtensionManifestEntry(extensionsDir: string, extDir: string, pkgText: string): Promise<void> {
+    try {
+      const pkg = JSON.parse(pkgText) as { publisher?: string; name?: string; version?: string }
+      const id = (pkg.publisher ?? 'zhaoyang10') + '.' + (pkg.name ?? 'dsh-ai-commit')
+      const manifestPath = join(extensionsDir, 'extensions.json')
+      let entries: Array<Record<string, unknown>> = []
+      if (existsSync(manifestPath)) {
+        try {
+          const parsed: unknown = JSON.parse(await readFile(manifestPath, 'utf8'))
+          if (Array.isArray(parsed)) entries = parsed as Array<Record<string, unknown>>
+        } catch { /* malformed — start fresh */ }
+      }
+      const alreadyListed = entries.some((e) =>
+        (e.identifier as { id?: string } | undefined)?.id?.toLowerCase() === id.toLowerCase())
+      const isCurrent = alreadyListed && entries.some((e) =>
+        (e.identifier as { id?: string } | undefined)?.id?.toLowerCase() === id.toLowerCase()
+        && (e.version as string | undefined) === (pkg.version ?? '0.1.0'))
+      if (isCurrent) return
+      entries = entries.filter((e) =>
+        (e.identifier as { id?: string } | undefined)?.id?.toLowerCase() !== id.toLowerCase())
+      entries.push({
+        identifier: { id },
+        version: pkg.version ?? '0.1.0',
+        location: { $mid: 1, fsPath: extDir, path: extDir, scheme: 'file' },
+        relativeLocation: null,
+        metadata: {
+          id,
+          publisherId: pkg.publisher ?? 'zhaoyang10',
+          publisherDisplayName: pkg.publisher ?? 'zhaoyang10',
+          targetPlatform: 'undefined',
+          isApplicationScoped: false,
+          isPreReleaseVersion: false,
+          hasPreReleaseVersion: false,
+          installedTimestamp: Date.now(),
+          pinned: false,
+          preRelease: false,
+        },
+      })
+      await writeFile(manifestPath, JSON.stringify(entries))
+    } catch (err) {
+      console.warn('[ui-vscode] extension manifest registration failed:', err instanceof Error ? err.message : String(err))
     }
   }
 

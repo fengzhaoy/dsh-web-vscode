@@ -86,6 +86,9 @@ declare class VscodeTools extends TypertRemoteService {
    *  extension.js (cheap content hash). The dir is shared with dsh-web-ide's
    *  code-server instances, which simply ignore the extra extension. */
   private installBundledExtension;
+  /** Ensure extensions.json lists the bundled extension. Best effort: a
+   *  malformed manifest is reset to a fresh list with just this entry. */
+  private registerExtensionManifestEntry;
   private stopBridge;
   /** One HTTP probe: is the workbench serving? */
   private probeVscode;
