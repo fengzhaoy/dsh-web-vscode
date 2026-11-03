@@ -121,6 +121,40 @@ declare const TYPERT: {
       line: number;
       column: number;
     };
+  } | {
+    id: string;
+    service: string;
+    namespace: string;
+    method: string;
+    invocation: {
+      kind: string;
+    };
+    parameters: {
+      name: string;
+      wire: string;
+      source: string;
+      lookup: string;
+      codec: {
+        mode: string;
+        typeSymbol: string;
+        create: () => z.ZodIntersection<z.ZodString, z.ZodUnknown>;
+      };
+    }[];
+    cancellation: {
+      parameter: string;
+    };
+    result: {
+      mode: string;
+      typeSymbol: string;
+      create: () => z.ZodReadonly<z.ZodObject<{
+        message: z.ZodReadonly<z.ZodString>;
+      }, z.core.$strip>>;
+    };
+    sourceLocation: {
+      file: string;
+      line: number;
+      column: number;
+    };
   })[];
   model: {
     services: {

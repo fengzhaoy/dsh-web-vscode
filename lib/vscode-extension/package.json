@@ -1,0 +1,52 @@
+{
+  "name": "dsh-ai-commit",
+  "displayName": "DSH AI Commit Message",
+  "description": "AI-generate a git commit message from the current changes, using the DSH host's configured LLM. Adds a sparkle button next to the commit button in the Source Control view.",
+  "version": "0.1.0",
+  "publisher": "zhaoyang10",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dsh-ai-commit.generate",
+        "title": "Generate Commit Message with AI",
+        "icon": "$(sparkle)",
+        "category": "DSH"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "dsh-ai-commit.generate",
+          "group": "navigation@-1",
+          "when": "config.git.enabled && scmProviderCount == 1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DSH AI Commit",
+      "properties": {
+        "dsh-ai-commit.bridgeUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Overridden automatically from the DSH_AI_BRIDGE_URL environment variable; the localhost bridge that runs the LLM."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package || npx @vscode/vsce package"
+  }
+}

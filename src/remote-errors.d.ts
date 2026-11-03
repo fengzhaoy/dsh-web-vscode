@@ -15,5 +15,25 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'vscode-tools/vscode-timeout': { readonly [key: string]: unknown }
     /** No Session workspace root is available for the call. */
     'vscode-tools/no-workspace': { readonly [key: string]: unknown }
+    /** The workspace is not a git repository. */
+    'vscode-tools/not-a-repo': { readonly [key: string]: unknown }
+    /** No uncommitted changes to generate a message from. */
+    'vscode-tools/no-changes': { readonly [key: string]: unknown }
+    /** A git plumbing command failed. */
+    'vscode-tools/git-failed': { readonly [key: string]: unknown }
+    /** A git plumbing command timed out. */
+    'vscode-tools/git-timeout': { readonly [key: string]: unknown }
+    /** The call was cancelled by the client. */
+    'vscode-tools/aborted': { readonly [key: string]: unknown }
+    /** The LLM service is not available. */
+    'vscode-tools/llm-unavailable': { readonly [key: string]: unknown }
+    /** No model is configured. */
+    'vscode-tools/no-model': { readonly [key: string]: unknown }
+    /** The LLM adapter failed. */
+    'vscode-tools/llm-failed': { readonly [key: string]: unknown }
+    /** The model returned an empty commit message. */
+    'vscode-tools/llm-empty': { readonly [key: string]: unknown }
+    /** The AI bridge failed. */
+    'vscode-tools/bridge-failed': { readonly [key: string]: unknown }
   }
 }

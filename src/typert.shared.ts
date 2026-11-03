@@ -22,6 +22,10 @@ const _vscode_tools_vscodeTools_vscodeOpen_result$schema = z.object({
   'ready': z.boolean().readonly(),
 }).readonly()
 
+const _vscode_tools_vscodeTools_generateCommitMessage_result$schema = z.object({
+  'message': z.string().readonly(),
+}).readonly()
+
 export const scopeParameter = (typeSymbol: string) => ({
   name: 'workspaceFileScope',
   wire: 'workspaceFileScopeId',
@@ -83,6 +87,24 @@ export const vscodeStatusInvocation = {
   sourceLocation: { file: 'src/index.ts', line: 114, column: 3 },
 }
 
+export const generateCommitMessageInvocation = {
+  id: PKG + '#vscodeTools/generateCommitMessage',
+  service: 'vscodeTools',
+  namespace: 'vscodeTools',
+  method: 'generateCommitMessage',
+  invocation: { kind: 'direct' },
+  parameters: [
+    scopeParameter('@deepseek-ai/dsh-session/types#SessionId'),
+  ],
+  cancellation: { parameter: 'signal' },
+  result: {
+    mode: 'strict',
+    typeSymbol: PKG + '/types#CommitMessageResult',
+    create: () => _vscode_tools_vscodeTools_generateCommitMessage_result$schema,
+  },
+  sourceLocation: { file: 'src/index.ts', line: 131, column: 3 },
+}
+
 export const vscodeStopInvocation = {
   id: PKG + '#vscodeTools/vscodeStop',
   service: 'vscodeTools',
@@ -131,6 +153,13 @@ export const serviceModel = {
       signature: "@Remote async vscodeStop( workspaceFileScope: WorkspaceFileScope, signal: AbortSignal, ): Promise<void>",
       summary: 'Stop the code-server for this Session.',
       jsDoc: '/** Stop the code-server for this Session. */',
+    },
+    {
+      kind: 'method',
+      name: 'generateCommitMessage',
+      signature: "@Remote async generateCommitMessage( workspaceFileScope: WorkspaceFileScope, signal: AbortSignal, ): Promise<CommitMessageResult>",
+      summary: 'AI-generate a commit message from the uncommitted changes.',
+      jsDoc: '/** AI-generate a commit message from the uncommitted changes. */',
     },
   ],
 }

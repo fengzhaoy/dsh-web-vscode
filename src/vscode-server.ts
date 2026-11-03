@@ -4,6 +4,7 @@
  * so the two plugins keep identical discovery/args/url semantics.
  */
 import { existsSync } from 'node:fs'
+import { createServer } from 'node:http'
 import { homedir } from 'node:os'
 import { delimiter, join } from 'node:path'
 
@@ -92,12 +93,29 @@ export function workspaceUrl(origin: string, folder: string): string {
   return origin + '/?folder=' + encodeURIComponent(folder)
 }
 
-/** Pick a free-ish port deterministically from a base, avoiding a range the
- *  caller already holds. */
-export function nextFreePort(base: number, inUse: Iterable<number>): number {
+/** Pick a genuinely bindable port deterministically from a base, avoiding
+ *  the ports the caller already holds AND ports other processes on this
+ *  machine hold (e.g. dsh-web-ide's code-server on the shared 8787): probe
+ *  each candidate by binding a listener and dropping it. Falls back to the
+ *  first non-taken candidate if every probe errors for an unexpected reason
+ *  (never blocks the spawn on probe infrastructure failing). */
+export async function nextFreePort(base: number, inUse: Iterable<number>): Promise<number> {
   const taken = new Set<number>()
   for (const p of inUse) taken.add(p)
-  let port = base
-  while (taken.has(port) && port < base + 100) port += 1
-  return port
+  let firstFree = -1
+  for (let port = base; port < base + 100; port += 1) {
+    if (taken.has(port)) continue
+    if (await isBindable(port)) return port
+    if (firstFree < 0) firstFree = port
+  }
+  return firstFree >= 0 ? firstFree : base + 100
+}
+
+/** True when a loopback listener can bind the port right now. */
+function isBindable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const probe = createServer()
+    probe.once('error', () => resolve(false))
+    probe.listen(port, '127.0.0.1', () => probe.close(() => resolve(true)))
+  })
 }

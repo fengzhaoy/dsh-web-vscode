@@ -8,6 +8,7 @@
  */
 import {
   PKG,
+  generateCommitMessageInvocation,
   vscodeOpenInvocation,
   vscodeStatusInvocation,
   vscodeStopInvocation,
@@ -19,6 +20,7 @@ export const TYPERT_REMOTE = {
     vscodeOpenInvocation,
     vscodeStatusInvocation,
     vscodeStopInvocation,
+    generateCommitMessageInvocation,
   ],
 }
 export default TYPERT_REMOTE

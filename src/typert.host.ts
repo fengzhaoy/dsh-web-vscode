@@ -8,6 +8,7 @@ import { z } from 'zod'
 import {
   PKG,
   serviceModel,
+  generateCommitMessageInvocation,
   vscodeOpenInvocation,
   vscodeStatusInvocation,
   vscodeStopInvocation,
@@ -21,6 +22,7 @@ export const TYPERT = {
     vscodeOpenInvocation,
     vscodeStatusInvocation,
     vscodeStopInvocation,
+    generateCommitMessageInvocation,
   ],
   model: {
     services: [serviceModel],
