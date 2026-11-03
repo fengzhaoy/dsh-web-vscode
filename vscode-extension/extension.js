@@ -35,17 +35,54 @@ function bridgeUrl() {
   return null
 }
 
-/** The git extension's exported API (vscode.git). */
+/** The git extension's exported API (vscode.git). The activation result is
+ *  a GitExtension facade: getAPI(1) returns the versioned API whose
+ *  `repositories` getter yields open repositories (this is exactly what the
+ *  extension's own "git.api.getRepositories" command uses internally). */
 async function gitApi() {
   const ext = vscode.extensions.getExtension('vscode.git')
   if (ext === undefined) return null
-  const api = await ext.activate()
-  return api && typeof api.getRepositories === 'function' ? api : null
+  const exported = await ext.activate()
+  try {
+    if (exported && typeof exported.getAPI === 'function') return exported.getAPI(1)
+  } catch { /* model not ready yet */ }
+  return null
 }
 
 /** The repository matching the focused SCM view / first folder. Mirrors how
  *  VS Code's own git commands resolve the "current" repository. */
 async function currentRepository() {
+  // The git model scans folders asynchronously after activation — on a cold
+  // workbench the repository list can still be empty for a moment. Retry
+  // briefly before concluding there is nothing open.
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const api = await gitApi()
+    const repositories = api === null ? [] : (api.repositories ?? [])
+    const found = pickRepository(repositories)
+    if (found !== null) return found
+    await new Promise((r) => setTimeout(r, 250))
+  }
+  return null
+}
+
+/** Pick the repository for this command (single, active editor's, or first). */
+function pickRepository(repositories) {
+  if (repositories.length === 0) return null
+  if (repositories.length === 1) return repositories[0]
+  const active = vscode.window.activeTextEditor?.document.uri.fsPath
+  if (active !== undefined) {
+    const match = repositories.find((r) => active.startsWith(r.rootUri.fsPath + '/'))
+    if (match !== undefined) return match
+  }
+  const first = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+  if (first !== undefined) {
+    const match = repositories.find((r) => first.startsWith(r.rootUri.fsPath))
+    if (match !== undefined) return match
+  }
+  return repositories[0]
+}
+
+async function currentRepositoryLegacy() {
   const api = await gitApi()
   if (api === null) return null
   const repositories = api.repositories ?? []

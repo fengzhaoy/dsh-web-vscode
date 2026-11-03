@@ -1,6 +1,5 @@
 # @zhaoyang10/dsh-web-vscode
 
-ss
 DSH web 客户端的 VS Code tab 插件：在「会话」tab 后面和右侧栏各注册一个 **VS Code** tab，点击打开即默认进入内嵌 VS Code（code-server）工作区页面——等价于 dsh-web-ide 左侧栏 VS Code 图标打开的那个页面。
 
 ## 架构
