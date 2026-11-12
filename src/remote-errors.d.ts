@@ -10,9 +10,18 @@ import '@deepseek-ai/dsh-typert-protocol'
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface RemoteErrorDetailsMap {
     /** code-server is not installed on this machine. */
-    'vscode-tools/vscode-missing': { readonly [key: string]: unknown }
+    'vscode-tools/vscode-missing': {
+      /** Every path the Host probed, in preference order (the install guide lists them). */
+      readonly searchedPaths?: readonly string[]
+      /** Host platform (node process.platform). */
+      readonly platform?: string
+      readonly [key: string]: unknown
+    }
     /** code-server never answered on its port. */
-    'vscode-tools/vscode-timeout': { readonly [key: string]: unknown }
+    'vscode-tools/vscode-timeout': {
+      readonly platform?: string
+      readonly [key: string]: unknown
+    }
     /** No Session workspace root is available for the call. */
     'vscode-tools/no-workspace': { readonly [key: string]: unknown }
     /** The workspace is not a git repository. */

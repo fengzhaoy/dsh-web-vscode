@@ -8,7 +8,9 @@ DSH web 客户端的 VS Code tab 插件：在「会话」tab 后面和右侧栏�
 - **客户端（lib/client.js）**：
   - `conversation.view` slot 注册 id `vscode`、order 1（chat=0 之后、trajectory=10 之前）；
   - `sidebarRightTabs` 注册右侧栏 tab（kind `vscode`，keepMounted），打开时自动全屏（模拟点击 `[data-sidebar-right-mode=fullscreen]`，与手动点击同一路径）；
-  - `VscodeView` 首次挂载即自动 `vscodeOpen`，iframe 加载 workbench；关闭 tab 不杀进程，重开即时恢复，「停止服务」才关闭。
+  - `VscodeView` 首次挂载即自动 `vscodeOpen`，由 `vscodeFrameHost` 在 `<body>` 上创建**常驻 overlay iframe** 加载 workbench；关闭 tab 不杀进程，重开即时恢复，「停止服务」才关闭。
+- **未安装 code-server 的引导（参照 dsh-web-ide）**：点击 VS Code 时若本机找不到 code-server，面板显示安装引导：说明原因、列出 host 实际探测过的路径（`details.searchedPaths`）、按平台给出 `brew install code-server` / `npm install -g code-server`（一键复制）、`DSH_IDE_VSCODE_BIN` 指定路径提示，以及「重试」按钮。若已安装却报缺失，多半是 `dsh web` 的 PATH 里没有它（如 nvm），重启 dsh web 或设置 `DSH_IDE_VSCODE_BIN` 即可。
+- **页面缓存（vscodeFrameHost，参照 dsh-web-ide）**：iframe 不放在 React 树里。DSH 切换视图会**卸载**非活动视图的 body，而 iframe 一旦离开文档就会被浏览器销毁、整个 workbench 重新加载。所以 frame 只创建一次，挂在 `<body>` 下的 `position:fixed` 覆盖层中，每帧跟随 `VscodeView` 渲染的锚点（`[data-testid=vscode-anchor]`）；切到「对话」或其它 tab 时只是 `display:none` 隐藏（保留已打开的编辑器、终端与滚动位置），切回来直接复用同一个文档。只有「重载」「停止服务」或 code-server 换了 URL 才会真正销毁重建。右侧栏 non-active tab 由宿主加 `hidden/inert` 隐藏，同样只会 park、不会重载。
 
 ## 依赖
 

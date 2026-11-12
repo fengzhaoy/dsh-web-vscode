@@ -20,7 +20,7 @@ import { RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protoc
 import z from '@deepseek-ai/schemastery'
 import { BlockAssembler, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { deepFreeze } from '@deepseek-ai/dsh-util-values'
-import { codeServerArgs, findCodeServer, nextFreePort, workspaceUrl, type VscodeServerEntry } from './vscode-server.js'
+import { codeServerArgs, codeServerCandidates, findCodeServer, nextFreePort, workspaceUrl, type VscodeServerEntry } from './vscode-server.js'
 
 /** Prototype marker the typert protocol's Remote decorators write; declared
  *  here as a plain property so this package needs no decorator lowering
@@ -100,7 +100,14 @@ export class VscodeTools extends TypertRemoteService {
 
     const bin = findCodeServer()
     if (bin === null) {
-      throw new RemoteError('vscode-tools/vscode-missing', 'code-server is not installed on this machine', {})
+      // Carry the probe result across the wire: the guide lists exactly where
+      // this process looked and on which platform, so a user who DID install
+      // code-server (e.g. through nvm, invisible to dsh web's PATH) can see the
+      // real cause instead of a generic "not found".
+      throw new RemoteError('vscode-tools/vscode-missing', 'code-server is not installed on this machine', {
+        searchedPaths: codeServerCandidates(),
+        platform: process.platform,
+      })
     }
     const port = await nextFreePort(8787, [...this.vscodeServers.values()].map((e) => e.port))
     const stateDir = join(homedir(), '.dsh-ide', 'code-server')
@@ -143,7 +150,9 @@ export class VscodeTools extends TypertRemoteService {
       await new Promise((r) => setTimeout(r, 150))
     }
     await this.stopVscode(sessionId)
-    throw new RemoteError('vscode-tools/vscode-timeout', 'code-server did not answer on its port', {})
+    throw new RemoteError('vscode-tools/vscode-timeout', 'code-server did not answer on its port', {
+      platform: process.platform,
+    })
   }
 
   /** Current state of this Session's VS Code server, if any. */

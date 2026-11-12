@@ -52,9 +52,28 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   const view = src('src/client/VscodeView.tsx')
   const client = src('src/client/index.ts')
   const host = src('src/index.ts')
-  check('view auto-opens the server on mount', view.includes('autoOpenedFor') && view.includes('void openVscode()'))
-  check('iframe points at the served url', view.includes('src={info.url}'))
-  check('missing code-server is explained', view.includes('vscode.notInstalled'))
+  check('view auto-opens the server on first mount', view.includes('await openVscode()'))
+  check('view adopts an already-loaded frame instead of reloading', view.includes('hasVscodeFrame(cached)'))
+  // Missing code-server: a setup state with an install guide (ported from
+  // dsh-web-ide), not a bare error box.
+  const locales = src('src/client/locales.ts')
+  const themeSrc = src('src/client/theme.ts')
+  const errorsDts = src('src/remote-errors.d.ts')
+  const typesSrc = src('src/client/types.ts')
+  check('missing code-server renders the install guide', view.includes('vscode-missing-guide') && view.includes("error.kind === 'missing'"))
+  check('start failures keep the plain error box', view.includes("error.kind === 'start'") && view.includes('data-testid="vscode-error"'))
+  check('guide lists the probed paths', view.includes('searchedPaths.slice(0, 12)') && view.includes("t('vscode.missing.searchedPaths')"))
+  check('guide offers brew on macOS', view.includes("platform === 'darwin'") && view.includes('brew install code-server'))
+  check('guide offers npm elsewhere', view.includes('npm install -g code-server'))
+  check('guide commands are copyable', view.includes('copyText(command)') && view.includes('data-testid="vscode-copy-command"'))
+  check('guide points at DSH_IDE_VSCODE_BIN', view.includes('DSH_IDE_VSCODE_BIN=/path/to/code-server'))
+  check('guide has a retry button', view.includes('data-testid="vscode-missing-retry"'))
+  check('guide styles shipped', themeSrc.includes('.vscode-guide-title') && themeSrc.includes('.vscode-guide-retry'))
+  // Keyed as 'vscode.missing.*' (NOT bare 'missing.*') in both dictionaries.
+  check('guide is localized in zh and en', ['title', 'reason', 'searchedPaths', 'install', 'recommended', 'afterInstall', 'pathHint', 'copyCommand'].every((k) => locales.split("'vscode.missing." + k + "'").length - 1 === 2))
+  check('host reports searchedPaths + platform for a missing binary', host.includes("'vscode-tools/vscode-missing'") && host.includes('searchedPaths: codeServerCandidates()') && host.includes('platform: process.platform'))
+  check('failure details are declared on the protocol map', errorsDts.includes('searchedPaths?: readonly string[]') && errorsDts.includes('platform?: string'))
+  check('view type keeps the guide payload', typesSrc.includes("kind: 'missing'") && typesSrc.includes('searchedPaths: readonly string[]'))
   check('conversation view tab registered after chat', client.includes("'conversation.view'") && client.includes('order: 1'))
   check('sidebar tab type registered', client.includes('sidebarRightTabs') && client.includes("kind: 'vscode'") || (client.includes('sidebarRightTabs') && client.includes("const VSCODE_KIND = 'vscode'")))
   check('sidebar tab body registered under its id', client.includes("'sidebar.right.pane.tab'") && client.includes('key: VSCODE_TAB_ID'))
@@ -80,6 +99,11 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   check('width handles hidden while vscode view mounted', theme.includes(`:has([data-vscode-view]) ~ [data-width-handle]{display:none !important}`))
   check('session container stretches under vscode view', theme.includes(`:has([data-vscode-view]) > div{flex:1 1 0%`))
   check('view root carries the data-vscode-view marker', view.includes('data-vscode-view=""'))
+  check('view mounts the persistent overlay for a served url', view.includes('mountFrame(res.value.url)'))
+  check('view parks the overlay when its body unmounts', view.includes('useEffect(() => () => { parkVscodeFrame() }, [])'))
+  const viewCode = view.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  check('view never renders the iframe in its own tree', !/<iframe[\s>]/.test(viewCode) && view.includes('shownUrl') && view.includes('showVscodeFrame'))
+  check('only an explicit restart destroys the frame', (view.match(/destroyVscodeFrame\(\)/g) ?? []).length === 2 && view.includes('if (restart) destroyVscodeFrame()'))
 }
 
 // --- manifest parity ---
@@ -95,6 +119,95 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   check('client manifest lists every host method', uniq(host).join(',') === uniq(client).join(','),
     'missing from client: ' + uniq(host).filter((m) => !client.includes(m)).join(',') || '(none)')
   check('vscode methods reach the browser proxy', client.includes('vscodeOpen') && client.includes('vscodeStop'))
+}
+
+// --- persistent overlay (behavioural, needs no browser) ---
+// The whole point: an iframe that leaves the document is destroyed by the
+// browser, so the frame must live OUTSIDE React and a tab switch must only
+// hide it. These checks drive vscodeFrameHost against a minimal DOM stub and
+// assert the frame node is never detached.
+{
+  const mk = (tag) => {
+    // `attrs` holds DOM attributes; `className` is a plain property, like the DOM.
+    const attrs = {}
+    const el = {
+      tag, attrs, className: '', style: {}, children: [], parent: null, isConnected: true, src: '',
+      getAttribute: (k) => (k in attrs ? attrs[k] : null),
+      setAttribute: (k, v) => { attrs[k] = String(v) },
+      appendChild: (c) => { c.parent = el; el.children.push(c); return c },
+      remove: () => {
+        const kids = el.parent?.children
+        if (kids !== undefined) { const i = kids.indexOf(el); if (i >= 0) kids.splice(i, 1) }
+        el.parent = null
+        el.isConnected = false
+      },
+      getBoundingClientRect: () => ({ top: 50, left: 10, width: 800, height: 600, right: 810, bottom: 650 }),
+      closest: () => null,
+      querySelector: (s) => s.includes('vscode-anchor') ? (anchor.isConnected ? anchor : null) : null,
+    }
+    return el
+  }
+  const body = mk('body')
+  const anchor = mk('div')
+  anchor.isConnected = false
+  const doc = {
+    body,
+    documentElement: body,
+    createElement: (tag) => mk(tag),
+    querySelector: (s) => s.includes('vscode-anchor') ? (anchor.isConnected ? anchor : null) : null,
+  }
+  const win = { innerWidth: 1600, innerHeight: 1000, document: doc }
+  let rafCb = null
+  const raf = (f) => { rafCb = f; return 1 }
+  win.requestAnimationFrame = raf
+  win.cancelAnimationFrame = () => { rafCb = null }
+  const g = globalThis
+  g.window = win
+  g.document = doc
+  // The host uses the bare requestAnimationFrame global, exactly like a page.
+  g.requestAnimationFrame = raf
+  g.cancelAnimationFrame = () => { rafCb = null }
+  const host = await import('../src/client/vscodeFrameHost.ts')
+  const URL0 = 'http://127.0.0.1:9001/?folder=%2Fw'
+
+  anchor.isConnected = true
+  body.appendChild(anchor)
+  host.showVscodeFrame(URL0, anchor)
+  rafCb?.()
+  const overlay = body.children.find((c) => c.className === 'vscode-overlay')
+  const frame0 = overlay?.children[0]
+  check('overlay container lives on <body>, not in React', overlay !== undefined)
+  check('first show creates the frame', frame0?.tag === 'iframe' && (frame0.attrs['src'] ?? frame0.src) === URL0)
+  check('a shown overlay gets the anchor rect', overlay?.style.width === '800px' && overlay?.attrs['data-hidden'] === 'false')
+  check('a live frame is reported as cached', host.hasVscodeFrame(URL0) === true)
+
+  // Tab switch: the body unmounts -> anchor leaves the document. The frame
+  // must stay attached (that is what keeps its document alive).
+  anchor.remove()
+  anchor.isConnected = false
+  rafCb?.()
+  check('unmounted anchor parks the overlay', overlay?.attrs['data-hidden'] === 'true')
+  check('parking NEVER detaches the frame', body.children.some((c) => c.children[0] === frame0))
+  check('parked frame is still cached', host.hasVscodeFrame(URL0) === true && body.children.some((c) => c.children[0] === frame0))
+
+  // Tab switch back: a NEW anchor mounts; the SAME frame must be reused.
+  body.appendChild(anchor)
+  anchor.isConnected = true
+  host.showVscodeFrame(URL0, anchor)
+  rafCb?.()
+  check('re-showing reuses the same iframe (no reload)', body.children.find((c) => c.className === 'vscode-overlay')?.children[0] === frame0)
+  check('re-shown overlay is visible again', overlay?.attrs['data-hidden'] === 'false')
+
+  // Hidden by the host (right sidebar inactive tab): invisible box parks it.
+  anchor.getBoundingClientRect = () => ({ top: 0, left: 0, width: 0, height: 0, right: 0, bottom: 0 })
+  rafCb?.()
+  check('a hidden anchor parks the overlay', overlay?.attrs['data-hidden'] === 'true')
+
+  // Explicit reload / stop: the only path that really destroys the frame.
+  anchor.getBoundingClientRect = () => ({ top: 50, left: 10, width: 800, height: 600, right: 810, bottom: 650 })
+  host.destroyVscodeFrame()
+  check('destroy removes the frame for real', !body.children.some((c) => c.children[0] === frame0) && host.hasVscodeFrame(URL0) === false)
+  check('a different url builds a fresh frame', (() => { host.showVscodeFrame('http://127.0.0.1:9002/', anchor); rafCb?.(); return (body.children.find((c) => c.className === 'vscode-overlay')?.children[0])?.src === 'http://127.0.0.1:9002/' })())
 }
 
 // --- live round trip (only when installed) ---

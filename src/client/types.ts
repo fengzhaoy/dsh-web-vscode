@@ -9,10 +9,19 @@ import type { ReactNode } from 'react'
 /** Session identifiers are opaque strings on the wire. */
 export type SessionId = string
 
-/** Result shape of a Remote call: ok/value or an error. */
+/** Result shape of a Remote call: ok/value or an error. `details` is the
+ *  structured payload the Host attached (e.g. the paths probed for
+ *  code-server); it is {} when the Host sent none. */
 export type RemoteResult<T> =
   | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: { readonly code: string; readonly message: string } }
+  | { readonly ok: false; readonly error: { readonly code: string; readonly message: string; readonly details?: Record<string, unknown> } }
+
+/** Why the pane has no workbench; mirrors dsh-web-ide's VscodePaneError. */
+export type VscodePaneError =
+  /** code-server could not be found: show the install guide. */
+  | { readonly kind: 'missing'; readonly searchedPaths: readonly string[]; readonly platform: string }
+  /** It was found but failed to start / answer: show the plain error box. */
+  | { readonly kind: 'start'; readonly message: string }
 
 /** A running code-server instance. */
 export interface VscodeInfo {

@@ -13,6 +13,17 @@ export const zh = {
   'vscode.retry': '重试',
   'vscode.openFailed': '打开 VS Code 失败：{message}',
   'vscode.port': '端口 {port}',
+  'vscode.copy': '复制',
+  'vscode.copied': '已复制',
+  // Missing code-server install guide (ported from dsh-web-ide).
+  'vscode.missing.title': '未找到 code-server',
+  'vscode.missing.reason': '在这台机器上找不到 code-server 可执行文件，VS Code 面板需要它才能启动。',
+  'vscode.missing.searchedPaths': '已搜索以下位置',
+  'vscode.missing.install': '安装（任选其一）',
+  'vscode.missing.recommended': '（推荐，macOS）',
+  'vscode.missing.afterInstall': '安装完成后点击下方「重试」。如果仍然失败，请确认 code-server 在当前 PATH 中，或重启 dsh web。',
+  'vscode.missing.pathHint': '也可以指定可执行文件路径后重启 dsh web：',
+  'vscode.missing.copyCommand': '复制安装命令 {command}',
 }
 
 export const en = {
@@ -27,4 +38,14 @@ export const en = {
   'vscode.retry': 'Retry',
   'vscode.openFailed': 'Failed to open VS Code: {message}',
   'vscode.port': 'port {port}',
+  'vscode.copy': 'Copy',
+  'vscode.copied': 'Copied',
+  'vscode.missing.title': 'code-server not found',
+  'vscode.missing.reason': 'No code-server executable was found on this machine. The VS Code pane needs it to start.',
+  'vscode.missing.searchedPaths': 'Searched in',
+  'vscode.missing.install': 'Install (either one)',
+  'vscode.missing.recommended': '(recommended on macOS)',
+  'vscode.missing.afterInstall': 'Click Retry below once installed. If it still fails, make sure code-server is on PATH, or restart dsh web.',
+  'vscode.missing.pathHint': 'You can also point at the binary and restart dsh web:',
+  'vscode.missing.copyCommand': 'Copy install command {command}',
 }

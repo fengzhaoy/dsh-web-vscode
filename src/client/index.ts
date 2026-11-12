@@ -99,10 +99,11 @@ const VscodeSidebarTab = React.memo(function VscodeSidebarTab(props: {
     requestFullscreenPanel(ref.current)
   }, [visible, fullscreen])
 
-  // Pass per-tab visibility down: DSH HIDES an inactive tab's body instead of
-  // unmounting it, so the iframe should not react to tab switches — but keep
-  // the prop flowing for future use (e.g. terminal focus) in exact parity
-  // with dsh-web-ide's IdeSidebarTab.
+  // Pass per-tab visibility down: the right sidebar HIDES an inactive tab's
+  // body (hidden/inert) instead of unmounting it, so the iframe document is
+  // never affected by a tab switch — the prop only reflects the state, it
+  // does not drive any reload. Kept in exact parity with dsh-web-ide's
+  // IdeSidebarTab.
   const visibleProps: VscodeViewInjected = viewProps.tabVisible === visible ? viewProps : { ...viewProps, tabVisible: visible }
   return React.createElement('div', {
     ref,
