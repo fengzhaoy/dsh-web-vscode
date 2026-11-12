@@ -1,3 +1,38 @@
+# Dependencies (pnpm/npm/yarn)
+node_modules/
+
+# DSH runtime caches
+.dsh-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Build staging (published artifacts under lib/ ARE tracked on purpose:
+# the GitHub repo installs from a prebuilt checkout, and the editor keeps
+# node_modules/ hidden while reading it)
+dist/
+coverage/
+*.tgz
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Screenshot scratch space (published shots live in docs/screenshots/)
+browser-screenshots/
+
 # Build and Release Folders
 bin-debug/
 bin-release/
