@@ -16,7 +16,7 @@ export const VSCODE_STYLES = `
 [data-slot='conversation.session']:has([data-vscode-view]) > div{flex:1 1 0% !important;min-height:0 !important}
 [data-conversation-scroll]:has([data-vscode-view]) ~ [data-width-handle]{display:none !important}
 [data-slot='conversation.session']:has([data-vscode-view]) ~ [data-composer-seat]{display:none}
-.vscode-shell{position:absolute;inset:0;display:flex;flex-direction:column;background:#1e1e1e;z-index:3}
+.vscode-shell{position:absolute;inset:0;display:flex;flex-direction:column;background:#1e1e1e;color:#cccccc;z-index:3}
 .vscode-bar{display:flex;align-items:center;gap:8px;padding:4px 10px;border-bottom:1px solid #2b2b2b;flex:none}
 .vscode-title{font-size:12px;font-weight:600;color:#cccccc}
 .vscode-origin{font-size:11px;color:#8b8b8b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
