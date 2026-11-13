@@ -14,7 +14,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { createServer, type Server } from 'node:http'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import z from '@deepseek-ai/schemastery'
@@ -589,12 +589,20 @@ export class VscodeTools extends TypertRemoteService {
         identifier: { id },
         version: pkg.version ?? '0.1.0',
         location: { $mid: 1, fsPath: extDir, path: extDir, scheme: 'file' },
-        relativeLocation: null,
+        // MUST be a string: the workbench's profile scanner validates every
+        // entry with `isString(relativeLocation) || isUri(relativeLocation)`
+        // (extensionsProfileScannerService). A null here raises
+        // "Invalid extensions content in extensions.json", which aborts the
+        // WHOLE user-extension scan on each attempt — 100 times on every page
+        // load — and takes the builtin git extension down with it, so Source
+        // Control shows no badge and no changed files.
+        relativeLocation: basename(extDir),
         metadata: {
           id,
           publisherId: pkg.publisher ?? 'zhaoyang10',
           publisherDisplayName: pkg.publisher ?? 'zhaoyang10',
-          targetPlatform: 'undefined',
+          // VS Code spells "no specific platform" as the string 'universal'.
+          targetPlatform: 'universal',
           isApplicationScoped: false,
           isPreReleaseVersion: false,
           hasPreReleaseVersion: false,

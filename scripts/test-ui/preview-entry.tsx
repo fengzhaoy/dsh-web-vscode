@@ -1,8 +1,8 @@
 /**
- * Static test page for the storefront screenshots and manual QA: mounts the
- * REAL VscodeView against a stub vscodeTools face. Default mode answers like a
- * host with no code-server installed (the install guide); ?live=<url> answers
- * like a running server (the embedded workbench).
+ * Harness entry for scripts/capture-screenshots.mjs: mounts the REAL VscodeView
+ * against a stub vscodeTools face.
+ *   /            -> answers like a host with no code-server (install guide)
+ *   ?live=<url>  -> answers like a running server (embedded workbench)
  */
 import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -27,12 +27,7 @@ const missing = {
     code: 'vscode-tools/vscode-missing',
     message: 'code-server is not installed on this machine',
     details: {
-      searchedPaths: [
-        '/Users/me/.nvm/versions/node/v24.14.0/bin/code-server',
-        '/usr/local/bin/code-server',
-        '/opt/homebrew/bin/code-server',
-        '/Users/me/.local/bin/code-server',
-      ],
+      searchedPaths: ['/Users/me/.nvm/versions/node/v24.14.0/bin/code-server', '/usr/local/bin/code-server', '/opt/homebrew/bin/code-server'],
       platform: 'darwin',
     },
   },
@@ -44,7 +39,6 @@ const vscodeTools = {
   vscodeStop: async () => ({ ok: true as const, value: undefined }),
 }
 
-// VscodeView positions itself absolutely inside its host: give it a box.
 const host = document.createElement('div')
 host.style.cssText = 'position:relative;height:100%'
 document.getElementById('root')!.appendChild(host)

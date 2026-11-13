@@ -1,6 +1,6 @@
 {
   "name": "@zhaoyang10/dsh-web-vscode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "VS Code tab for the dsh web client: an embedded code-server workbench opened as a conversation view tab and in the right sidebar.",
   "type": "module",
   "main": "lib/index.js",

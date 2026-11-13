@@ -86,6 +86,14 @@ check('findCodeServer ignores entries that do not exist', findCodeServer({ HOME:
   check('AI commit: host method present', host.includes('async generateCommitMessage('))
   check('Config is a schemastery schema (cordis calls ~standard.validate)', host.includes('static Config = z.object({})'))
   check('extension dir resolved ESM-safely (no __dirname in ESM bundle)', host.includes('fileURLToPath(import.meta.url)') && !host.includes('join(__dirname'))
+  // Regression: a null relativeLocation makes the workbench's profile scanner
+  // throw "Invalid extensions content", aborting the whole user-extension scan
+  // on every load — which kills the builtin git extension with it, so Source
+  // Control shows neither the change badge nor the changed files. The scanner
+  // validates `isString(relativeLocation) || isUri(relativeLocation)`.
+  const manifestBlock = host.slice(host.indexOf('entries.push({'), host.indexOf('await writeFile(manifestPath'))
+  check('extensions.json relativeLocation is a string, never null', !/relativeLocation:\s*null/.test(manifestBlock) && /relativeLocation:\s*basename\(/.test(manifestBlock))
+  check('extensions.json targetPlatform is a real value', !/targetPlatform:\s*'undefined'/.test(manifestBlock) && /targetPlatform:\s*'universal'/.test(manifestBlock))
   check('AI commit: bridge env passed to code-server', host.includes('DSH_AI_BRIDGE_URL'))
   check('AI commit: bridge binds loopback only', host.includes("'127.0.0.1'"))
   check('AI commit: extension button in scm/title navigation group', extPkg.includes('"scm/title"') && extPkg.includes('navigation@-1'))
